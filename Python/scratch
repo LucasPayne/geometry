@@ -1,0 +1,27 @@
+
+def alt1_line_segments_intersection(AB, CD):
+    """ Line segments AB and CD 
+        Returns None if no intersection happens.
+        
+        Construction: If AB and CD are intersecting, then the intersection point can be given
+        in 2-barycentric coordinates on the segment CD. Since barycentric coordinates are invariant
+        under projections, take the absolute lengths of the projections of C and D onto the normal of AB,
+        which can be obtained by taking the absolute value of the dot product of A->C and A->D onto
+        a normalized normal of AB.
+        [Square root and two divisions]
+    """
+    if not intersecting(AB, CD):
+        return None
+    A = AB.a
+    B = AB.b
+    C = CD.a
+    D = CD.b
+
+    v1 = B - A
+    n = Point(-v1.y, v1.x) * (1/norm(v1))
+
+    dot1 = abs(dot(C - A, n))
+    dot2 = abs(dot(D - A, n))
+    ratio = dot1/(dot1 + dot2)
+    return C + ratio*(D - C)
+
