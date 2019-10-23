@@ -4,7 +4,6 @@
 
 from shapes import *
 
-
 def det(v1, v2):
     return dot(v1, Point(-v2.y, v2.x))
 
@@ -15,14 +14,18 @@ def square_length(vector):
 
 def norm(vector):
     return sqrt(square_length(vector))
+def normalized(vector):
+    return vector * (1/norm(vector))
 
 
 def dot(v1, v2):
     return v1.x * v2.x + v1.y * v2.y
 
 
+def perp(v):
+    return Point(-v.y, v.x)
 def normal_perp(v):
-    return Point(-v.y, v.x) * (1/norm(v))
+    return perp(v) * (1/norm(v))
 
 
 def weighted_midpoint(p1, p2, w1, w2):

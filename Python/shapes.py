@@ -7,6 +7,21 @@ from collections import namedtuple
 from random import random, randrange
 from abc import ABCMeta, abstractmethod 
 
+# >>>>>>>>>>>>>>>>>>>
+def norm(vector):
+    return sqrt(square_length(vector))
+def perp(v):
+    return Point(-v.y, v.x)
+def normal_perp(v):
+    return perp(v) * (1/norm(v))
+def square_length(vector):
+    return vector.x ** 2 + vector.y ** 2
+def det(v1, v2):
+    return dot(v1, Point(-v2.y, v2.x))
+def dot(v1, v2):
+    return v1.x * v2.x + v1.y * v2.y
+# >>>>>>>>>>>>>>>>>>>
+
 
 class Shape(metaclass=ABCMeta):
     @abstractmethod
@@ -99,10 +114,26 @@ class AABB(Shape):
     def segments(self):
         points = self.points()
         return [LineSeg(points[i], points[(i + 1)%len(points)]) for i in range(len(points))]
-
     def centroid(self):
         return self.origin + Point(horiz / 2, vert / 2)
 
+
+class OBB(Shape):
+    def __init__(self, origin, right_dir, horiz, vert):
+        self.right = right_dir * (1/norm(right_dir))
+        self.up = perp(self.right)
+        self.origin = origin
+        self.horiz = horiz
+        self.vert = vert
+    def points(self):
+        return [self.origin, self.origin + self.horiz * self.right,
+                             self.origin + self.horiz * self.right + self.vert * self.up,
+                             self.origin + self.vert * self.up]
+    def segments(self):
+        points = self.points()
+        return [LineSeg(points[i], points[(i + 1)%len(points)]) for i in range(len(points))]
+    def centroid(self):
+        return self.origin + (self.horiz / 2) * self.right + (self.vert / 2) * self.up
 
 
 class Poly(Shape):

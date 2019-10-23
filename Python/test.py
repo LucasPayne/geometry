@@ -151,6 +151,18 @@ def test_line_segment_aabb_intersection():
     test_line_aabb_intersection(kind="segment")
 
 
+def test_obb():
+    # aabb = AABB(Point(0, 0), 3, 2)
+    # plot(aabb)
+    obb = OBB(Point(0, 0), Point(1, 1), 3, 2)
+    plot(obb)
+    plt.show()
+
+def test_convex_hull():
+    while True:
+        points = [Point.random(1) for _ in range(500)]
+        convex_hull(points)
+        plt.show()
 
 def prefix_function(function, prefunction):
     # from SO: hook python module function

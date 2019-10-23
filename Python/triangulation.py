@@ -1,5 +1,6 @@
 #
 # Triangulation and partitioning
+# Convex hulls
 #
 
 from matplotlib import pyplot as plt
@@ -58,3 +59,50 @@ def triangulate(poly, animate_file=""):
         subprocess.call([*"convert -delay 20 -loop 0".split(" "), f"/tmp/{animate_file}_*.png", f"images/{animate_file}.gif"])
         subprocess.call(["rm", *[f"/tmp/{animate_file}_{i}.png" for i in range(1, count+1)]])
     return triangles
+
+
+from math import acos
+from math import exp
+def convex_hull(points):
+    origin = min(points, key=lambda p:p.y)
+    
+    # Sorting radially: since it is on the convex hull with minimum y component,
+    # sort by the angle the points make from the x axis.
+    # Naive: take arc-cosines of the x-component of the points normalized
+    #     sort anti-clockwise
+
+    radial_points = [origin] + sorted(set(points) - {origin}, key=lambda p: -acos(normalized(p - origin).x))
+
+    for i in range(len(radial_points)):
+        ip = (i + 1) % len(radial_points)
+        plot(LineSeg(radial_points[i], radial_points[ip]), color='b')
+
+    cur_gon = list(range(len(radial_points)))
+    count = 0
+    while True:
+        updated = False
+        new_gon = []
+        for i in range(len(cur_gon)):
+            ip = (i - 1) % len(cur_gon)
+            ipp = (i + 1) % len(cur_gon)
+            # print(ip, i, ipp)
+            # print(cur_gon[ip], cur_gon[i], cur_gon[ipp])
+            area = Triangle(radial_points[cur_gon[ip]], radial_points[cur_gon[i]], radial_points[cur_gon[ipp]]).area()
+            if area >= 0:
+                new_gon.append(cur_gon[i])
+            else:
+                updated = True
+        # print(cur_gon)
+        cur_gon = new_gon
+        # print(cur_gon)
+
+        for i in range(len(cur_gon)):
+            point1 = radial_points[cur_gon[i]]
+            point2 = radial_points[cur_gon[(i + 1)%len(cur_gon)]]
+            plot(LineSeg(point1, point2), color='r', alpha=(1/(1 + exp(-count - 1))))
+        count += 1
+        if not updated:
+            break
+
+
+
