@@ -150,6 +150,8 @@ class Poly(Shape):
         return len(self.points)
     def __getitem__(self, key):
         return self.points[key]
+    def segments(self):
+        return [LineSeg(self.points[i], self.points[(i + 1)%len(self.points)]) for i in range(len(self.points))]
 
     def centroid(self):
         triangles = triangulate(self)

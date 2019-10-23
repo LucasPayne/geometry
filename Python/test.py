@@ -152,11 +152,18 @@ def test_line_segment_aabb_intersection():
 
 
 def test_obb():
-    # aabb = AABB(Point(0, 0), 3, 2)
-    # plot(aabb)
-    obb = OBB(Point(0, 0), Point(1, 1), 3, 2)
-    plot(obb)
-    plt.show()
+    while True:
+        points = []
+        for _ in range(500):
+            p = Point.random(random() * random())
+            points.append(p)
+
+        hull = convex_hull(points)
+        plot(points, color='b', s=0.5)
+        obb = minimal_obb(hull, plotting=True)
+        plot(hull, color='lime')
+        plot(obb, color='k', linewidth=5)
+        plt.show()
 
 def test_convex_hull():
     while True:
@@ -187,11 +194,12 @@ def complete(text, state):
 commands = [name[len("test_"):] for name in dir() if name.startswith("test_")]
 for command in commands:
     print(f"\t{command}")
-while True:
-    readline.parse_and_bind("tab: complete")
-    readline.set_completer(complete)
-    inp = input('Enter section name: ')
 
+readline.parse_and_bind("tab: complete")
+readline.set_completer(complete)
+
+while True:
+    inp = input('Enter section name: ')
     if inp in commands:
         eval(f"test_{inp}()")
         break

@@ -1,6 +1,7 @@
 #
 # Triangulation and partitioning
 # Convex hulls
+# Bounding boxes
 #
 
 from matplotlib import pyplot as plt
@@ -73,10 +74,10 @@ def convex_hull(points, animate_file=""):
 
     radial_points = [origin] + sorted(set(points) - {origin}, key=lambda p: -acos(normalized(p - origin).x))
 
-    for i in range(len(radial_points)):
-        ip = (i + 1) % len(radial_points)
-        plot(LineSeg(radial_points[i], radial_points[ip]), color='b')
     if animate_file != "":
+        for i in range(len(radial_points)):
+            ip = (i + 1) % len(radial_points)
+            plot(LineSeg(radial_points[i], radial_points[ip]), color='b')
         plt.savefig(f"/tmp/{animate_file}_0.png")
         plt.show()
 
@@ -99,11 +100,11 @@ def convex_hull(points, animate_file=""):
         cur_gon = new_gon
         # print(cur_gon)
 
-        for i in range(len(cur_gon)):
-            point1 = radial_points[cur_gon[i]]
-            point2 = radial_points[cur_gon[(i + 1)%len(cur_gon)]]
-            plot(LineSeg(point1, point2), color='r', alpha=(1/(1 + exp(-count - 1))))
         if animate_file != "":
+            for i in range(len(cur_gon)):
+                point1 = radial_points[cur_gon[i]]
+                point2 = radial_points[cur_gon[(i + 1)%len(cur_gon)]]
+                plot(LineSeg(point1, point2), color='r', alpha=(1/(1 + exp(-count - 1))))
             plt.savefig(f"/tmp/{animate_file}_{count}.png")
             plt.show()
         count += 1
@@ -112,6 +113,50 @@ def convex_hull(points, animate_file=""):
     if animate_file != "":
         subprocess.call([*"convert -delay 20 -loop 0".split(" "), f"/tmp/{animate_file}_*.png", f"images/{animate_file}.gif"])
         subprocess.call(["rm", *[f"/tmp/{animate_file}_{i}.png" for i in range(1, count+1)]])
+    
+    return Poly([radial_points[i] for i in cur_gon])
 
 
+from math import sqrt
+def minimal_obb(convex_hull, plotting=False):
 
+    cur_min_area = float('inf')
+    cur_depth = None
+    cur_horiz_left = None
+    cur_horiz_right = None
+    cur_seg = None
+
+    points = convex_hull.points
+
+    if plotting:
+        plot(convex_hull, color='b')
+
+    for seg in convex_hull.segments():
+
+        right = normalized(seg.b - seg.a)
+        up = perp(right)
+
+        depth = max(abs(dot(p - seg.a, up)) for p in points)
+        horiz_left = min(dot(p - seg.a, right) for p in points)
+        horiz_right = max(dot(p - seg.a, right) for p in points)
+
+        area = depth * (horiz_right - horiz_left)
+        if area < cur_min_area:
+            cur_min_area = area
+            cur_depth = depth
+            cur_horiz_left = horiz_left
+            cur_horiz_right = horiz_right
+            cur_seg = seg
+
+        if plotting:
+            obb = OBB(seg.a + horiz_left * right,
+                      right,
+                      horiz_right - horiz_left,
+                      -depth)
+            plot(obb, color='r')
+
+    obb = OBB(cur_seg.a + cur_horiz_left * normalized(cur_seg.b - cur_seg.a),
+              normalized(cur_seg.b - cur_seg.a),
+              cur_horiz_right - cur_horiz_left,
+              -cur_depth)
+    return obb

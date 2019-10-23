@@ -9,28 +9,28 @@ from intersections import *
 
 from matplotlib import pyplot as plt
 
-def plot(obj, color='r', alpha=1):
+def plot(obj, **kwargs):
     if type(obj) is LineSeg:
-        plt.plot([obj.a.x, obj.b.x], [obj.a.y, obj.b.y], color=color, alpha=alpha)
+        plt.plot([obj.a.x, obj.b.x], [obj.a.y, obj.b.y], **kwargs)
     elif type(obj) is Poly:
         if len(obj) > 0:
-            plt.plot([p.x for p in obj] + [obj[0].x], [p.y for p in obj] + [obj[0].y], color=color, alpha=alpha)
+            plt.plot([p.x for p in obj] + [obj[0].x], [p.y for p in obj] + [obj[0].y], **kwargs)
     elif type(obj) is Point:
-        plt.scatter([obj.x], [obj.y], color=color, alpha=alpha)
+        plt.scatter([obj.x], [obj.y], **kwargs)
     elif type(obj) is Triangle:
         triangle = obj
         plt.plot([triangle.A.x, triangle.B.x, triangle.C.x, triangle.A.x],
                  [triangle.A.y, triangle.B.y, triangle.C.y, triangle.A.y],
-                 color=color, alpha=alpha)
+                 **kwargs)
     elif type(obj) is Circle:
-        plot_circle(obj, color=color, alpha=alpha)
+        plot_circle(obj, **kwargs)
     elif type(obj) is AABB:
-        plot(obj.segments(), color=color, alpha=alpha)
+        plot(obj.segments(), **kwargs)
     elif type(obj) is OBB:
-        plot(obj.segments(), color=color, alpha=alpha)
+        plot(obj.segments(), **kwargs)
     elif type(obj) is list:
         for o in obj:
-            plot(o, color)
+            plot(o, **kwargs)
 
 
 def plot_circle(circle, color='r', alpha=1):
