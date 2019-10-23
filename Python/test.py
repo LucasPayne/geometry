@@ -161,7 +161,7 @@ def test_obb():
 def test_convex_hull():
     while True:
         points = [Point.random(1) for _ in range(500)]
-        convex_hull(points)
+        convex_hull(points, animate_file="convex_hull_animation")
         plt.show()
 
 def prefix_function(function, prefunction):
