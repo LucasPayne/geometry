@@ -19,5 +19,5 @@ for f in Python/images/*; do
     height=$normalizing_height
     width=$(echo "($width * $mul) / 10000" | bc)
 
-    printf "<img src=\"$f\" alt=\"$f\" width=\"$width\" height=\"$height\">\n" >> README.md
+    printf "<img src=\"$f\" alt=\"$f\" width=\"$width\" height=\"$height\"> " >> README.md
 done
