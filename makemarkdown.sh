@@ -23,8 +23,8 @@ find Python/images/created/ -type f -name "*.png" -o -name "*.gif" | while IFS= 
     # Normalize to a specific height
     mul=$(echo "($normalizing_height * 10000) / $height" | bc)
 
-    # height=$normalizing_height
-    # width=$(echo "($width * $mul) / 10000" | bc)
+    height=$normalizing_height
+    width=$(echo "($width * $mul) / 10000" | bc)
 
     printf "<img src=\"$f\" alt=\"$f\" width=\"$width\" height=\"$height\"> " >> README.md
 done
