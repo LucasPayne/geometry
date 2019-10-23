@@ -4,6 +4,7 @@ rm Python/images/created/*
 
 find Python/images/ -type f -name "*.png" -o -name "*.gif" | while IFS= read -r f; do
     created_filename="Python/images/created/$(basename "$f")"
+    # convert "$f" -trim "$created_filename"
     convert "$f" -trim -colorspace Gray "$created_filename"
 done
 

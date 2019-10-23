@@ -154,15 +154,29 @@ def test_line_segment_aabb_intersection():
 def test_obb():
     while True:
         points = []
-        for _ in range(500):
-            p = Point.random(random() * random())
-            points.append(p)
+        # for _ in range(500):
+        #     p = Point.random(random() * random())
+        #     points.append(p)
+        cluster_offset = Point.random(5)
+        points = [Point.random(1) for _ in range(50)]
+        points += [Point.random(2) + cluster_offset for _ in range(50)]
 
         hull = convex_hull(points)
         plot(points, color='b', s=0.5)
         obb = minimal_obb(hull, plotting=True)
         plot(hull, color='lime')
         plot(obb, color='k', linewidth=5)
+        plt.show()
+
+
+def test_bounding_circle():
+    while True:
+        cluster_offset = Point.random(5)
+        points = [Point.random(1) for _ in range(50)]
+        points += [Point.random(2) + cluster_offset for _ in range(50)]
+        bounding_circle = minimal_bounding_circle(points)
+        plot(points, color='b')
+        plot(bounding_circle, color='r')
         plt.show()
 
 def test_convex_hull():

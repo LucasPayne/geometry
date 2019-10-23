@@ -119,6 +119,14 @@ def convex_hull(points, animate_file=""):
 
 from math import sqrt
 def minimal_obb(convex_hull, plotting=False):
+    """
+        Brute force:
+        p: #points
+        n: #points on convex hull
+        O(plogp + n^2)
+        
+        O(plogp + n) is possible with rotating calipers.
+    """
 
     cur_min_area = float('inf')
     cur_depth = None
@@ -160,3 +168,14 @@ def minimal_obb(convex_hull, plotting=False):
               cur_horiz_right - cur_horiz_left,
               -cur_depth)
     return obb
+
+
+from itertools import product
+def minimal_bounding_circle(points):
+    """ Is incorrect. Something like this should be proven.
+    """
+    square_diameter, point = max([(dot(p - q, p - q), midpoint(p, q)) for p,q in product(points, repeat=2)],
+                                  key=lambda x:x[0])
+    return Circle(point, sqrt(square_diameter)/2)
+    
+
