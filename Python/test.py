@@ -363,7 +363,7 @@ readline.parse_and_bind("tab: complete")
 readline.set_completer(complete)
 
 while True:
-    inp = input('Enter section name: ')
+    inp = input('Enter test name: ')
     if inp in commands:
         eval(f"test_{inp}()")
         break
