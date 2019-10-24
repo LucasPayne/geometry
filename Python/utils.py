@@ -18,7 +18,7 @@ def make_poly_from_text(filename):
             if val.isdigit() or val in ['A', 'B', 'C', 'D', 'E', 'F']:
                 numbered_points.append((int(val, 16), Point(j/horiz, 1 - i/vert)))
 
-    print(numbered_points)
+    # print(numbered_points)
     points = [np[1] for np in sorted(numbered_points, key=lambda x:x[0])]
 
     return Poly(points)

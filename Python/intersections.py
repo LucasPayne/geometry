@@ -248,7 +248,10 @@ def point_in_polygon(point, poly, plotting=False):
         Can do:
             Convex partition (could cache this) then simple convex inclusion
     """
-    ray = Ray(point, point + Point(0, 1))
+    # ray = Ray(point, point + Point(0, 1))
+    ray = Ray(point, point + Point.random(1) -  Point(0.5, 0.5))
+    while ray.a == ray.b:
+        ray = Ray(point, point + Point.random(1) -  Point(0.5, 0.5))
 
     if plotting:
         plot(ray, color='k')

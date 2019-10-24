@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from shapes import *
 from operations import *
 from plotting import *
+from intersections import *
 import subprocess
 import sys
 
@@ -31,29 +32,29 @@ def triangulate(poly, animate_file=""):
                 cut_poly.points.remove(p2)
                 triangles.append(Triangle(p1, p2, p3))
                 if animate_file != "":
-                    plot(poly, 'k')
-                    plot(triangles, 'r')
-                    plot(Triangle(p1, p2, p3), 'g')
+                    plot(poly, color='k')
+                    plot(triangles, color='r')
+                    plot(Triangle(p1, p2, p3), color='g')
                     plt.savefig(f"/tmp/{animate_file}_{count}.png")
                     plt.show()
                     count += 1
                 break
             elif animate_file != "":
-                plot(poly, 'k')
-                plot(triangles, 'r')
-                plot(Triangle(p1, p2, p3), 'y')
+                plot(poly, color='k')
+                plot(triangles, color='r')
+                plot(Triangle(p1, p2, p3), color='y')
                 plt.savefig(f"/tmp/{animate_file}_{count}.png")
                 plt.show()
                 count += 1
     triangles.append(Triangle(*cut_poly))
     if animate_file != "":
-        plot(poly, 'k')
-        plot(triangles, 'r')
-        plot(Triangle(*cut_poly), 'g')
+        plot(poly, color='k')
+        plot(triangles, color='r')
+        plot(Triangle(*cut_poly), color='g')
         plt.savefig(f"/tmp/{animate_file}_{count}.png")
         plt.show()
 
-        plot(triangles, 'r')
+        plot(triangles, color='r')
         plt.savefig(f"/tmp/{animate_file}_{count}.png")
         plt.show()
 

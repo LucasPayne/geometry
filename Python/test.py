@@ -46,8 +46,7 @@ def test_triangulate():
     #              Point(3, 1),
     #              Point(3, -0.5)])
 
-
-    for i in [1,2,3]:
+    for i in [1,2,4]:
         poly = make_poly_from_text(f"data/{i}.poly")
         triangles = triangulate(poly, f"triangulation{i}")
         # plot(poly)
@@ -324,7 +323,7 @@ def test_descartes():
 # }}}
 
 def test_point_in_polygon():
-    for i in [1,2,3]:
+    for i in [1,2,3,4]:
         poly = make_poly_from_text(f"data/{i}.poly")
         plot(poly, color='k')
         points = [Point.random(1) for _ in range(20)]
