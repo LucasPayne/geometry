@@ -5,18 +5,22 @@
 #   (can include polygon collections from polygon intersections, etc.)
 #
 
+import sys
 from shapes import *
 from operations import *
+from plotting import *
 
 
 def intersecting(objA, objB):
-    if type(objA) is Triangle and type(objB) is Circle:
+    T = (type(objA), type(objB))
+
+    if T == (Triangle, Circle):
         triangle = objA
         circle = objB
         mink_sum = minkowski(triangle, circle)
         return any([point_in(circle.point, part) for part in mink_sum])
 
-    elif type(objA) is LineSeg and type(objB) is LineSeg:
+    elif T == (LineSeg, LineSeg):
         a1 = objA.a
         a2 = objA.b
         b1 = objB.a
@@ -24,37 +28,87 @@ def intersecting(objA, objB):
         return (((det(b1 - a1, a2 - a1) < 0) != (det(b2 - a1, a2 - a1) <= 0)) and
                 ((det(a1 - b1, b2 - b1) < 0) != (det(a2 - b1, b2 - b1) <= 0)))
 
-    elif type(objA) is Point and type(objB) is AABB:
+    elif T == (Point, AABB):
         point, box = objA, objB
         return ((box.origin.x <= point.x <= box.origin.x + box.horiz) and
                 (box.origin.y <= point.y <= box.origin.y + box.vert))
 
-    elif type(objA) is Point and type(objB) is Triangle:
+    elif T == (Point, OBB):
+        point, box = objA, objB
+        # transform to coords of obb
+        pright = dot(point - box.origin, box.right)
+        pup = dot(point - box.origin, box.up)
+        return ((0 <= pright <= box.horiz) and
+                (0 <= pup <= box.vert))
+
+    elif T == (Point, Triangle):
         point, A, B, C = objA, objB.A, objB.B, objB.C
         return (det(B - A, point - A) < 0 and
                 det(C - B, point - B) < 0 and
                 det(A - C, point - C) < 0)
 
-    elif type(objA) is Point and type(objB) is Circle:
+    elif T == (Point, Circle):
         point, circle = objA, objB
         return square_length(point - circle.point) < circle.radius ** 2
 
+    elif T == (AABB, AABB):
+        box1, box2 = objA, objB
+        # Test for separating axes
+        if (box1.origin.x + box1.horiz < box2.origin.x
+                or box2.origin.x + box2.horiz < box1.origin.x
+                or box1.origin.y + box1.vert < box2.origin.y
+                or box2.origin.y + box2.vert < box1.origin.y):
+            return False
+        return True
+
+    elif T == (OBB, OBB):
+        box1, box2 = objA, objB
+        # Transform the second box into the coordinates of the first and do an AABB-OBB test
+        transformed_box = transformed(box2, CartesianFrame(box1.origin, box1.right, box1.up))
+        aabb = AABB(Point(0, 0), box1.horiz, box1.vert)
+
+        return intersecting(aabb, transformed_box)    
+
+    elif T == (AABB, OBB):
+        aabb, obb = objA, objB
+        # check separating axes normal to the aabb sides  by trivial projection
+        if (min(p.x for p in obb.points()) > aabb.origin.x + aabb.horiz
+                or max(p.x for p in obb.points()) < aabb.origin.x):
+            return False
+        if (min(p.y for p in obb.points()) > aabb.origin.y + aabb.vert
+                or max(p.y for p in obb.points()) < aabb.origin.y):
+            return False
+        # check separating axes normal to the obb
+        if (max(dot(p - obb.origin, obb.right) for p in aabb.points()) < 0
+                or min(dot(p - obb.origin, obb.right) for p in aabb.points()) > obb.horiz
+                or max(dot(p - obb.origin, obb.up) for p in aabb.points()) < 0
+                or min(dot(p - obb.origin, obb.up) for p in aabb.points()) > obb.vert):
+            return False
+        return True
+    else:
+        print(f"Error: intersecting test not defined for {T}")
+        sys.exit()
 
 def intersection(objA, objB):
-    if type(objA) is LineSeg and type(objB) is LineSeg:
+    T = (type(objA), type(objB))
+
+    if T == (LineSeg, LineSeg):
         return line_segments_intersection(objA, objB)
 
-    elif type(objA) is Line and type(objB) is Line:
+    elif T == (Line, Line):
         return lines_intersection(objA, objB)
 
-    elif type(objA) is Line and type(objB) is AABB:
+    elif T == (Line, AABB):
         return line_aabb_intersection(objA, objB)
 
-    elif type(objA) is LineSegment and type(objB) is AABB:
+    elif T == (LineSegment, AABB):
         return line_segment_aabb_intersection(objA, objB)
 
-    elif type(objA) is Ray and type(objB) is AABB:
+    elif T == (Ray, AABB):
         return ray_aabb_intersection(objA, objB)
+    else:
+        print(f"Error: intersection test not defined for {T}")
+        sys.exit()
 
 
 def lines_intersection_barycentric(AB, CD):

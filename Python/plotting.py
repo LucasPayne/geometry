@@ -10,25 +10,42 @@ from intersections import *
 from matplotlib import pyplot as plt
 
 def plot(obj, **kwargs):
-    if type(obj) is LineSeg:
+    T = type(obj)
+
+    if T == LineSeg:
         plt.plot([obj.a.x, obj.b.x], [obj.a.y, obj.b.y], **kwargs)
-    elif type(obj) is Poly:
+
+    elif T == Poly:
         if len(obj) > 0:
             plt.plot([p.x for p in obj] + [obj[0].x], [p.y for p in obj] + [obj[0].y], **kwargs)
-    elif type(obj) is Point:
+
+    elif T == Point:
         plt.scatter([obj.x], [obj.y], **kwargs)
-    elif type(obj) is Triangle:
+
+    elif T == Triangle:
         triangle = obj
         plt.plot([triangle.A.x, triangle.B.x, triangle.C.x, triangle.A.x],
                  [triangle.A.y, triangle.B.y, triangle.C.y, triangle.A.y],
                  **kwargs)
-    elif type(obj) is Circle:
+
+    elif T == Circle:
         plot_circle(obj, **kwargs)
-    elif type(obj) is AABB:
+
+    elif T == AABB:
+        plot(obj.origin, **kwargs)
         plot(obj.segments(), **kwargs)
-    elif type(obj) is OBB:
+
+    elif T == OBB:
+        plot(obj.origin, **kwargs)
         plot(obj.segments(), **kwargs)
-    elif type(obj) is list:
+
+    elif  T == CartesianFrame:
+        plot(obj.origin, **kwargs)
+        plot(LineSeg(obj.origin, obj.origin + obj.e1), **kwargs)
+        plot(LineSeg(obj.origin, obj.origin + obj.e2), **kwargs)
+        plot_arrowhead(obj.origin + obj.e1, obj.e1, color='b')
+        plot_arrowhead(obj.origin + obj.e2, obj.e2, color='r')
+    elif T == list:
         for o in obj:
             plot(o, **kwargs)
 

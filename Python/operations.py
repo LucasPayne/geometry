@@ -2,6 +2,7 @@
 # Vector and coordinate operations
 #
 
+import sys
 from shapes import *
 
 def det(v1, v2):
@@ -63,3 +64,4 @@ def barycentric_to_cartesian(points, weights):
 
 def centroid(points):
     return barycentric_to_cartesian(points, [1 for p in points])
+

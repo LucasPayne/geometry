@@ -2,6 +2,7 @@
 # Shape class definitions and basic constructions
 #
 
+import sys
 from math import sin, cos, pi, sqrt
 from collections import namedtuple
 from random import random, randrange
@@ -20,6 +21,8 @@ def det(v1, v2):
     return dot(v1, Point(-v2.y, v2.x))
 def dot(v1, v2):
     return v1.x * v2.x + v1.y * v2.y
+def normalized(vector):
+    return vector * (1/norm(vector))
 # >>>>>>>>>>>>>>>>>>>
 
 
@@ -58,6 +61,8 @@ class LineSeg(Shape):
         self.b = b
     def centroid(self):
         return midpoint(self.a, self.b)
+    def __repr__(self):
+        return f"[{self.a}-{self.b}]"
 
 
 class Line(Shape):
@@ -66,6 +71,8 @@ class Line(Shape):
         self.b = b
     def centroid(self):
         return None
+    def __repr__(self):
+        return f"[{self.a}---{self.b}]"
 
 
 class Ray(Shape):
@@ -74,6 +81,8 @@ class Ray(Shape):
         self.b = b
     def centroid(self):
         return None
+    def __repr__(self):
+        return f"[{self.a}-->{self.b}]"
 
 
 class Triangle(Shape):
@@ -100,9 +109,14 @@ class Triangle(Shape):
         return [self.A, self.B, self.C]
     def centroid(self):
         return barycentric_to_cartesian(self.points, [1, 1, 1])
+    def __repr__(self):
+        return f"[{self.A}-{self.B}-{self.C}-.]"
 
 
 class AABB(Shape):
+    """ representation: origin and non-negative ->right extent, ^up extent
+        Other possible representations are radial from center and bottom-left-top-right etc.
+    """
     def __init__(self, origin, horiz, vert):
         self.origin = origin
         self.horiz = horiz
@@ -116,6 +130,8 @@ class AABB(Shape):
         return [LineSeg(points[i], points[(i + 1)%len(points)]) for i in range(len(points))]
     def centroid(self):
         return self.origin + Point(horiz / 2, vert / 2)
+    def __repr__(self):
+        return f"AABB({self.origin},\n\t->{self.horiz},\n\t^{self.vert})"
 
 
 class OBB(Shape):
@@ -125,6 +141,14 @@ class OBB(Shape):
         self.origin = origin
         self.horiz = horiz
         self.vert = vert
+
+    def top_right_point(self):
+        return self.origin + self.horiz * self.right + self.vert * self.up
+    def top_point(self):
+        return self.origin + self.horiz * self.right + self.vert * self.up
+    def right_point(self):
+        return self.origin + self.horiz * self.right + self.vert * self.up
+
     def points(self):
         return [self.origin, self.origin + self.horiz * self.right,
                              self.origin + self.horiz * self.right + self.vert * self.up,
@@ -134,6 +158,8 @@ class OBB(Shape):
         return [LineSeg(points[i], points[(i + 1)%len(points)]) for i in range(len(points))]
     def centroid(self):
         return self.origin + (self.horiz / 2) * self.right + (self.vert / 2) * self.up
+    def __repr__(self):
+        return f"OBB({self.origin},\n\t{self.right}->{self.horiz},\n\t{self.up}^{self.vert})"
 
 
 class Poly(Shape):
@@ -165,6 +191,30 @@ class Circle(Shape):
     def centroid(self):
         return self.point
 
+############   Coordinates    #####################################
+
+class CartesianFrame:
+    # Orthonormal coordinate system
+    def __init__(self, origin, e1, e2):
+        self.origin = origin
+        self.e1 = e1
+        self.e2 = e2
+        self.orthogonalize_e1()
+        self.normalize()
+
+    def orthogonalize_e2(self):
+        self.e2 = self.e2 - dot(self.e2, normalized(self.e1)) * normalized(self.e1)
+    def orthogonalize_e1(self):
+        self.e1 = self.e1 - dot(self.e1, normalized(self.e2)) * normalized(self.e2)
+
+    def normalize(self):
+        self.e1 = normalized(self.e1)
+        self.e2 = normalized(self.e2)
+
+    @staticmethod
+    def ambient():
+        return CartesianFrame(Point(0, 0), Point(1, 0), Point(0, 1))
+
 
 ###################################################################
 
@@ -177,3 +227,26 @@ def minkowski(locus, moving):
                 Circle(triangle.B, circle.radius),
                 Circle(triangle.C, circle.radius)]
 
+
+# >>>
+def transformed(obj, frame):
+    T = (type(obj), type(frame))
+
+    if T == (OBB, CartesianFrame):
+        box = obj
+
+        new_origin = Point(dot(box.origin - frame.origin, normalized(frame.e1)),
+                           dot(box.origin - frame.origin, normalized(frame.e2)))
+
+        new_right = Point(dot(box.right, frame.e1),
+                          dot(box.right, frame.e2))
+
+        obb = OBB(new_origin, new_right, box.horiz, box.vert)
+        # the auto (-y, x) perp up-direction seems to be wrong for this case (in reflecting coordinates)
+        obb.up = Point(dot(box.up, frame.e1),
+                       dot(box.up, frame.e2))
+        return obb
+
+    else:
+        print(f"Error: no transformation defined for {T}")
+        sys.exit()

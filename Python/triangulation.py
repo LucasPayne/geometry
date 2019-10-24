@@ -114,7 +114,8 @@ def convex_hull(points, animate_file=""):
         subprocess.call([*"convert -delay 20 -loop 0".split(" "), f"/tmp/{animate_file}_*.png", f"images/{animate_file}.gif"])
         subprocess.call(["rm", *[f"/tmp/{animate_file}_{i}.png" for i in range(1, count+1)]])
     
-    return Poly([radial_points[i] for i in cur_gon])
+    # >>> Should get the convex hull in the right orientation in the first place
+    return Poly([radial_points[i] for i in cur_gon][::-1])
 
 
 from math import sqrt
@@ -126,6 +127,7 @@ def minimal_obb(convex_hull, plotting=False):
         O(plogp + n^2)
         
         O(plogp + n) is possible with rotating calipers.
+            [n <= p so O(plogp)]
     """
 
     cur_min_area = float('inf')
@@ -144,7 +146,7 @@ def minimal_obb(convex_hull, plotting=False):
         right = normalized(seg.b - seg.a)
         up = perp(right)
 
-        depth = max(abs(dot(p - seg.a, up)) for p in points)
+        depth = max(dot(p - seg.a, up) for p in points)
         horiz_left = min(dot(p - seg.a, right) for p in points)
         horiz_right = max(dot(p - seg.a, right) for p in points)
 
@@ -160,13 +162,13 @@ def minimal_obb(convex_hull, plotting=False):
             obb = OBB(seg.a + horiz_left * right,
                       right,
                       horiz_right - horiz_left,
-                      -depth)
+                      depth)
             plot(obb, color='r')
 
     obb = OBB(cur_seg.a + cur_horiz_left * normalized(cur_seg.b - cur_seg.a),
               normalized(cur_seg.b - cur_seg.a),
               cur_horiz_right - cur_horiz_left,
-              -cur_depth)
+              cur_depth)
     return obb
 
 
