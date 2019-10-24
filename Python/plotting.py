@@ -2,6 +2,7 @@
 # Plotting functions
 #
 
+import sys
 from shapes import *
 from utils import *
 from operations import *
@@ -39,6 +40,10 @@ def plot(obj, **kwargs):
         plot(obj.origin, **kwargs)
         plot(obj.segments(), **kwargs)
 
+    elif T == Ray:
+        plot(LineSeg(obj.a, obj.b), **kwargs)
+        plot_arrowhead(obj.b, obj.b - obj.a)
+
     elif  T == CartesianFrame:
         plot(obj.origin, **kwargs)
         plot(LineSeg(obj.origin, obj.origin + obj.e1), **kwargs)
@@ -48,6 +53,11 @@ def plot(obj, **kwargs):
     elif T == list:
         for o in obj:
             plot(o, **kwargs)
+
+
+    else:
+        print(f"Error: plotting not defined for {T}")
+        sys.exit()
 
 
 def plot_circle(circle, color='r', alpha=1):

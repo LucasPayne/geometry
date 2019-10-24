@@ -10,7 +10,22 @@ from random import random
 import readline
 import functools
 
-def test_centroids(): # {{{
+def probability_intersection():
+    """ computes approx proportion of line segment
+        pairs which intersect given their ends are
+        uniformly distributed on a square. """
+    num = 100000
+    intersecting_count = 0
+    for _ in range(num):
+        seg1 = LineSeg(Point.random(1), Point.random(1))
+        seg2 = LineSeg(Point.random(1), Point.random(1))
+        if intersecting(seg1, seg2):
+            intersecting_count += 1
+    print(intersecting_count / num)
+
+
+def test_centroids():
+# {{{
     while True:
         poly = random_poly(randrange(2, 8))
         plot(poly)
@@ -22,7 +37,8 @@ def test_centroids(): # {{{
         plt.show()
 # }}}
 
-def test_triangulate(): # {{{
+def test_triangulate():
+# {{{
     # poly = Poly([Point(1, 1),
     #              Point(1, 2),
     #              Point(2, 2),
@@ -41,7 +57,8 @@ def test_triangulate(): # {{{
 
 # }}}
 
-def test_line_segment_intersecting(): # {{{
+def test_line_segment_intersecting():
+# {{{
     while True:
         seg1 = LineSeg(Point.random(1), Point.random(1))
         seg2 = LineSeg(Point.random(1), Point.random(1))
@@ -50,7 +67,8 @@ def test_line_segment_intersecting(): # {{{
         plt.show()
 # }}}
 
-def test_line_segment_intersection(): # {{{
+def test_line_segment_intersection():
+# {{{
     while True:
         seg1 = LineSeg(Point.random(1), Point.random(1))
         seg2 = LineSeg(Point.random(1), Point.random(1))
@@ -61,7 +79,8 @@ def test_line_segment_intersection(): # {{{
         plt.show()
 # }}}
 
-def test_mass_line_segments(): # {{{
+def test_mass_line_segments():
+# {{{
     while True:
         segments = []
         intersection_points = []
@@ -78,20 +97,6 @@ def test_mass_line_segments(): # {{{
             plt.scatter([p.x], [p.y], color='k')
         plt.show()
 # }}}
-
-def probability_intersection():
-    """ computes approx proportion of line segment
-        pairs which intersect given their ends are
-        uniformly distributed on a square. """
-    num = 100000
-    intersecting_count = 0
-    for _ in range(num):
-        seg1 = LineSeg(Point.random(1), Point.random(1))
-        seg2 = LineSeg(Point.random(1), Point.random(1))
-        if intersecting(seg1, seg2):
-            intersecting_count += 1
-    print(intersecting_count / num)
-
 
 def test_lines_intersection():
 # {{{
@@ -264,9 +269,9 @@ def test_obb_transform():
         frame.orthogonalize_e1()
         frame.normalize()
 
-        print(f"box: {box}")
+        # print(f"box: {box}")
         transformed_box = transformed(box, frame)
-        print(f"transformed_box: {transformed_box}")
+        # print(f"transformed_box: {transformed_box}")
 
         
         plot(frame, color='k')
@@ -318,6 +323,18 @@ def test_descartes():
         plt.show()
 # }}}
 
+def test_point_in_polygon():
+    for i in [1,2,3]:
+        poly = make_poly_from_text(f"data/{i}.poly")
+        plot(poly, color='k')
+        points = [Point.random(1) for _ in range(20)]
+        for p in points:
+            if point_in_polygon(p, poly, plotting=True):
+                plot(p, color='k', s=100)
+                plot(p, color='y')
+            else:
+                plot(p, color='b')
+        plt.show()
 
 def prefix_function(function, prefunction):
     # from SO: hook python module function

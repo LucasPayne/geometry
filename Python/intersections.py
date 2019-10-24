@@ -47,6 +47,9 @@ def intersecting(objA, objB):
                 det(C - B, point - B) < 0 and
                 det(A - C, point - C) < 0)
 
+    elif T == (Point, Poly):
+        return point_in_polygon(objA, objB)
+
     elif T == (Point, Circle):
         point, circle = objA, objB
         return square_length(point - circle.point) < circle.radius ** 2
@@ -85,9 +88,10 @@ def intersecting(objA, objB):
                 or min(dot(p - obb.origin, obb.up) for p in aabb.points()) > obb.vert):
             return False
         return True
+
     else:
-        print(f"Error: intersecting test not defined for {T}")
-        sys.exit()
+        # Should still make intersecting tests
+        return intersection(objA, objB) is not None
 
 def intersection(objA, objB):
     T = (type(objA), type(objB))
@@ -101,11 +105,15 @@ def intersection(objA, objB):
     elif T == (Line, AABB):
         return line_aabb_intersection(objA, objB)
 
-    elif T == (LineSegment, AABB):
+    elif T == (LineSeg, AABB):
         return line_segment_aabb_intersection(objA, objB)
 
     elif T == (Ray, AABB):
         return ray_aabb_intersection(objA, objB)
+
+    elif T == (Ray, LineSeg):
+        return ray_line_segment_intersection(objA, objB)
+
     else:
         print(f"Error: intersection test not defined for {T}")
         sys.exit()
@@ -172,6 +180,16 @@ def line_segments_intersection(AB, CD):
     if 0 <= t and t <= 1 and 0 <= u and u <= 1:
         return AB.a + t*(AB.b - AB.a)
 
+def ray_line_segment_intersection(ray, seg):
+    intersection = lines_intersection_barycentric(ray, seg)
+    if intersection is None:
+        return None
+    t, u = intersection
+    if 0 <= t and 0 <= u and u <= 1:
+        return ray.a + t*(ray.b - ray.a)
+
+
+
 
 def line_aabb_intersection(AB, box):
     intersections = [lines_intersection_barycentric(AB, seg) for seg in box.segments()]
@@ -216,3 +234,31 @@ def line_segment_aabb_intersection(AB, box):
             return [AB.a, AB.b]
         return None
     return [AB.a + t*(AB.b - AB.a) for t,u in intersections]
+
+
+def point_in_polygon(point, poly, plotting=False):
+    """
+        Point ray parity
+        If a ray which is not parallel to any edge of the polygon is sent from the point,
+        then if the parity of the number of intersections the ray makes with a polygon segment is odd,
+        the point is in the polygon, otherwise not in.
+        BUGS/PROBLEMS:
+            Degeneracies when the ray is parallel to an edge, and it goes through the edge
+            Point can be on the polygon boundary
+        Can do:
+            Convex partition (could cache this) then simple convex inclusion
+    """
+    ray = Ray(point, point + Point(0, 1))
+
+    if plotting:
+        plot(ray, color='k')
+
+    count = 0
+    for seg in poly.segments():
+        intersect = intersection(ray, seg)
+        if intersect:
+            if plotting:
+                plot(intersect, color='k')
+            count += 1
+    return count % 2 == 1
+    
