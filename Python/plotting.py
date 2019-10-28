@@ -1,6 +1,6 @@
-#
-# Plotting functions
-#
+"""
+    Plotting functions
+"""
 
 import sys
 from shapes import *

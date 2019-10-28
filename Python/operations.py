@@ -1,6 +1,6 @@
-#
-# Vector and coordinate operations
-#
+"""
+    Vector and coordinate operations
+"""
 
 import sys
 from math import sin, cos

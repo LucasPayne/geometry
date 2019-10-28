@@ -1,9 +1,9 @@
-#
-# Intersection tests
-# Intersecting?
-# Intersection information: contact manifold, overlap polygon
-#   (can include polygon collections from polygon intersections, etc.)
-#
+"""
+    Intersection tests
+    Intersecting?
+    Intersection information: contact manifold, overlap polygon
+      (can include polygon collections from polygon intersections, etc.)
+"""
 
 import sys
 from shapes import *

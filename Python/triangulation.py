@@ -1,8 +1,8 @@
-#
-# Triangulation and partitioning
-# Convex hulls
-# Bounding boxes
-#
+"""
+    Triangulation and partitioning
+    Convex hulls
+    Bounding boxes
+"""
 
 from matplotlib import pyplot as plt
 from shapes import *

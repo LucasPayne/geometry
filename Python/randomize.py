@@ -1,6 +1,6 @@
-#
-# Random data generation
-#
+"""
+    Random data generation
+"""
 
 from shapes import *
 from triangulation import *

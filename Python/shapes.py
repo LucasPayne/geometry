@@ -1,6 +1,6 @@
-#
-# Shape class definitions and basic constructions
-#
+"""
+    Shape class definitions and basic constructions
+"""
 
 import sys
 from math import sin, cos, pi, sqrt

@@ -1,3 +1,7 @@
+""" 
+    Select and run a test collected from the files in the tests/ directory.
+"""
+
 from shapes import *
 from utils import *
 from operations import *
@@ -11,60 +15,52 @@ import functools
 from math import pi
 from matplotlib import pyplot as plt
 
-from test_algorithms import *
-from test_collision import *
-from test_bounding_volumes import *
-from test_intersections import *
-from test_misc import *
+import sys
+sys.path.append("./tests/")
+for test_file in [name for name in os.listdir("tests/") if name.startswith("test_") and name.endswith(".py")]:
+    module_name = test_file[:-len(".py")]
+    exec(f"from {module_name} import *")
+TEST_FUNCTIONS = [name for name in dir() if name.startswith("test_")]
 
-def probability_intersection():
-    """ computes approx proportion of line segment
-        pairs which intersect given their ends are
-        uniformly distributed on a square. """
-    num = 100000
-    intersecting_count = 0
-    for _ in range(num):
-        seg1 = LineSeg(Point.random(1), Point.random(1))
-        seg2 = LineSeg(Point.random(1), Point.random(1))
-        if intersecting(seg1, seg2):
-            intersecting_count += 1
-    print(intersecting_count / num)
+def main():
+    """
+        Usage:
+            python3 test.py: readline completion for selecting a test to run.
+            python3 test.py <test name>: run this test
+    """
+    if len(sys.argv) == 2:
+        eval(f"test_{sys.argv[1]}()")
+        sys.exit()
 
-################################
+    # Make sure pyplot always has equal axis aspects
+    def prefix_plt_show():
+        plt.gca().set_aspect('equal', adjustable='box')
+    plt.show = prefix_function(plt.show, prefix_plt_show)
 
-def prefix_function(function, prefunction):
-    # from SO: hook python module function
-    @functools.wraps(function)
-    def run(*args, **kwargs):
-        prefunction(*args, **kwargs)
-        return function(*args, **kwargs)
-    return run
+    # Initialize readline completer
+    def complete(text, state):
+        for cmd in commands:
+            if cmd.startswith(text):
+                if not state:
+                    return cmd
+                else:
+                    state -= 1
+    global TEST_FUNCTIONS
+    commands = [name[len("test_"):] for name in TEST_FUNCTIONS]
+    for command in commands:
+        print(f"\t{command}")
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(complete)
 
-def prefix_plt_show():
-    plt.gca().set_aspect('equal', adjustable='box')
-plt.show = prefix_function(plt.show, prefix_plt_show)
+    # readline until valid test is named, run the test, then exit.
+    while True:
+        inp = input('Enter test name: ')
+        if inp in commands:
+            eval(f"test_{inp}()")
+            break
+        elif inp == "":
+            break
 
-if len(sys.argv) == 2:
-    eval(f"test_{sys.argv[1]}()")
-    sys.exit()
 
-def complete(text, state):
-    for cmd in commands:
-        if cmd.startswith(text):
-            if not state:
-                return cmd
-            else:
-                state -= 1
-
-commands = [name[len("test_"):] for name in dir() if name.startswith("test_")]
-for command in commands:
-    print(f"\t{command}")
-
-readline.parse_and_bind("tab: complete")
-readline.set_completer(complete)
-
-while True:
-    inp = input('Enter test name: ')
-    if inp in commands:
-        eval(f"test_{inp}()")
-        break
+if __name__ == "__main__":
+    main()

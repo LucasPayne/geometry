@@ -1,10 +1,11 @@
-#
-# Utility functions: file reading, organizing, string processing, etc.
-#
+"""
+    Utility functions: file reading, organizing, string processing, etc.
+"""
 
 from shapes import *
 import os
 import sys
+import functools
 
 def make_poly_from_text(filename):
     lines = open(filename).read().splitlines()
@@ -25,4 +26,17 @@ def make_poly_from_text(filename):
 
     return Poly(points)
 
+
+def data_polys():
+    """ Generates the polygons from the data/ directory """
+    return [make_poly_from_text(f"data/{filename}") for filename in os.listdir("data") if filename.endswith(".poly")]
+
+
+def prefix_function(function, prefunction):
+    # from SO: hook python module function
+    @functools.wraps(function)
+    def run(*args, **kwargs):
+        prefunction(*args, **kwargs)
+        return function(*args, **kwargs)
+    return run
 
