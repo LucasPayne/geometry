@@ -4,11 +4,16 @@ from operations import *
 from intersections import *
 from plotting import *
 from triangulation import *
+from randomize import *
 
 from matplotlib import pyplot as plt
 from random import random
 import readline
 import functools
+
+from math import pi
+
+from matplotlib.animation import FuncAnimation
 
 def probability_intersection():
     """ computes approx proportion of line segment
@@ -37,7 +42,7 @@ def test_centroids():
         plt.show()
 # }}}
 
-def test_triangulate():
+def test_animate_triangulate():
 # {{{
     # poly = Poly([Point(1, 1),
     #              Point(1, 2),
@@ -48,11 +53,41 @@ def test_triangulate():
 
     for i in [1,2,4]:
         poly = make_poly_from_text(f"data/{i}.poly")
-        triangles = triangulate(poly, f"triangulation{i}")
+        triangles = triangulate_animate(poly, f"triangulation{i}")
         # plot(poly)
         # plot(triangles, 'g')
         # plot(polygon_barycenter(poly))
         # plt.show()
+
+# }}}
+
+def test_triangulate():
+# {{{
+    for i in [1,2,4,5]:
+        poly = make_poly_from_text(f"data/{i}.poly")
+        triangulation = triangulate(poly)
+        plot(poly, color='k')
+        plot(triangulation, color='r')
+        plt.show()
+
+
+# }}}
+
+def test_graph_triangulation():
+# {{{
+    for i in [1,2,4,5]:
+        poly = make_poly_from_text(f"data/{i}.poly")
+        convex_partition_graph = convex_partition(poly)
+        plot(convex_partition_graph.part_polys(), color='r')
+        plot_partition_graph(convex_partition_graph, color='k')
+        plt.show()
+
+    while True:
+        poly = random_convex_polygon(0, 1, 0, 1, 100, shift=1.25)
+        convex_partition_graph = convex_partition(poly)
+        plot(convex_partition_graph.part_polys(), color='r')
+        plot_partition_graph(convex_partition_graph, color='k')
+        plt.show()
 
 # }}}
 
@@ -323,6 +358,7 @@ def test_descartes():
 # }}}
 
 def test_point_in_polygon():
+# {{{
     for i in [1,2,3,4]:
         poly = make_poly_from_text(f"data/{i}.poly")
         plot(poly, color='k')
@@ -334,6 +370,83 @@ def test_point_in_polygon():
             else:
                 plot(p, color='b')
         plt.show()
+# }}}
+
+def test_convex_polygon_intersection():
+# {{{
+    while True:
+        polyA = random_convex_polygon(0, 1, 0, 1, 10, shift=1.25)
+        polyB = random_convex_polygon(0, 1, 0, 1, 10, shift=1.25)
+        intersect = convex_polygon_intersection(polyA, polyB)
+
+        plot([polyA, polyB], color='r' if intersect else 'b')
+        if intersect:
+             centroidA = barycentric_to_cartesian(polyA.points, [1 for _ in polyA.points])
+             plot(Ray(centroidA, centroidA + intersect), color='k')
+             plot(polyA + intersect, color='g')
+
+        plt.show()
+# }}}
+
+def test_collision_convex():
+# {{{
+    def set_axis():
+        plt.axis([0, 2.4, 0, 2.4])
+    set_axis()
+
+    polyA = None
+    polyB = None
+    while True:
+        polyA = random_convex_polygon(0, 0.2, 0, 0.2, 10, shift=1.25)
+        polyB = random_convex_polygon(0, 1, 0, 1, 30, shift=1.25)
+        if not convex_polygon_intersection(polyA, polyB):
+            break
+
+    centroidA = barycentric_to_cartesian(polyA.points, [1 for _ in polyA.points])
+    centroidB = barycentric_to_cartesian(polyB.points, [1 for _ in polyB.points])
+    motion_vector = normalized(centroidB - centroidA) * 0.12
+
+    for count in range(1, 30):
+        plot([polyA, polyB], color='k')
+
+        plt.savefig(f"/tmp/animate_collision_convex_{count}.png")
+        plt.clf()
+        set_axis()
+
+        centroidA = barycentric_to_cartesian(polyA.points, [1 for _ in polyA.points])
+        centroidB = barycentric_to_cartesian(polyB.points, [1 for _ in polyB.points])
+        polyA = polyA + motion_vector
+        intersect = convex_polygon_intersection(polyA, polyB)
+        if intersect:
+            plot(polyA, color='r')
+            plot(Ray(centroidA, centroidA + intersect), color='g')
+            polyA = polyA + intersect
+    subprocess.call([*"convert -alpha remove -layers OptimizePlus -delay 20 -loop 0".split(" "), f"/tmp/animate_collision_convex_*.png", f"images/collisionconvex.gif"])
+    subprocess.call(["mpv", "--loop", "images/collisionconvex.gif"])
+# }}}
+
+def test_line_circle_intersection():
+# {{{
+    while True:
+        circle = Circle(Point.random(1), 0.3 * random() + 0.05)
+        start_line = Line(Point.random(1), Point.random(1))
+
+        circle_intersecting = False
+
+        for i in range(-6, 7):
+            line = Line(start_line.a,
+                        start_line.a + rotate_vector(start_line.b - start_line.a,
+                                                     -pi/4.0 + i * pi/(2.0*12)))
+            intersect = intersection(line, circle)
+            plot(line, color='r' if intersect else 'b')
+            if intersect:
+                circle_intersecting = True
+                plot(intersect, color='k')
+
+        plot(circle, color='r' if circle_intersecting else 'b')
+
+        plt.show()
+# }}}
 
 def prefix_function(function, prefunction):
     # from SO: hook python module function
@@ -346,6 +459,12 @@ def prefix_function(function, prefunction):
 def prefix_plt_show():
     plt.gca().set_aspect('equal', adjustable='box')
 plt.show = prefix_function(plt.show, prefix_plt_show)
+
+
+if len(sys.argv) == 2:
+    eval(f"test_{sys.argv[1]}()")
+    sys.exit()
+
 
 def complete(text, state):
     for cmd in commands:

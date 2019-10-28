@@ -10,7 +10,6 @@ from shapes import *
 from operations import *
 from plotting import *
 
-
 def intersecting(objA, objB):
     T = (type(objA), type(objB))
 
@@ -74,7 +73,7 @@ def intersecting(objA, objB):
 
     elif T == (AABB, OBB):
         aabb, obb = objA, objB
-        # check separating axes normal to the aabb sides  by trivial projection
+        # check separating axes normal to the aabb sides by trivial projection
         if (min(p.x for p in obb.points()) > aabb.origin.x + aabb.horiz
                 or max(p.x for p in obb.points()) < aabb.origin.x):
             return False
@@ -88,6 +87,7 @@ def intersecting(objA, objB):
                 or min(dot(p - obb.origin, obb.up) for p in aabb.points()) > obb.vert):
             return False
         return True
+
 
     else:
         # Should still make intersecting tests
@@ -113,6 +113,9 @@ def intersection(objA, objB):
 
     elif T == (Ray, LineSeg):
         return ray_line_segment_intersection(objA, objB)
+
+    elif T == (Line, Circle):
+        return line_circle_intersection(objA, objB)
 
     else:
         print(f"Error: intersection test not defined for {T}")
@@ -150,7 +153,7 @@ def lines_intersection(AB, CD):
         (to avoid hugely distant points of intersection).
 
         BUGS/PROBLEMS:
-            close to parallel but intersecting lines which interesect close to their
+            close to parallel but intersecting lines which intersect close to their
             segment definitions should be considered intersecting, but currently they
             are not
     """
@@ -265,3 +268,49 @@ def point_in_polygon(point, poly, plotting=False):
             count += 1
     return count % 2 == 1
     
+
+def convex_polygon_intersection(polyA, polyB):
+    
+    """ If intersecting, returns the minimal separating vector for polyA """
+
+    min_overlap = float('inf')
+    min_separating_axis = None
+    separate_poly = polyA
+
+    for axis_poly, other_poly in [(polyA, polyB), (polyB, polyA)]:
+        for seg in axis_poly.segments():
+            axis = normal_perp(seg.b - seg.a)
+
+            min_axis_poly = 0
+            max_axis_poly = max(dot(p - seg.a, axis) for p in axis_poly.points)
+            min_other_poly = min(dot(p - seg.a, axis) for p in other_poly.points)
+            max_other_poly = max(dot(p - seg.a, axis) for p in other_poly.points)
+
+            if max_other_poly < min_axis_poly or min_other_poly > max_axis_poly:
+                return None
+
+            min_sep = min([min_axis_poly - max_other_poly, min_other_poly - max_axis_poly], key=lambda x:abs(x))
+            if abs(min_sep) < abs(min_overlap):
+                min_overlap = min_sep
+                min_separating_axis = axis
+                separate_poly = other_poly
+
+    if separate_poly is polyA:
+        return min_overlap * min_separating_axis
+    else:
+        return -min_overlap * min_separating_axis
+    
+
+def line_circle_intersection(line, circle):
+    """ Currently, not intersecting if tangent to the circle. """
+    n = normal_perp(line.b - line.a)
+    nline = normalized(line.b - line.a)
+    center_dist = dot(circle.point - line.a, n)
+    if abs(center_dist) >= circle.radius:
+        return None
+
+    rise = sqrt(circle.radius ** 2 - center_dist ** 2)
+    return [circle.point - center_dist * n + rise * nline, circle.point - center_dist * n - rise * nline]
+    
+
+

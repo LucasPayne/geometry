@@ -161,7 +161,7 @@ class OBB(Shape):
     def __repr__(self):
         return f"OBB({self.origin},\n\t{self.right}->{self.horiz},\n\t{self.up}^{self.vert})"
 
-
+        
 class Poly(Shape):
     def __init__(self, points):
         self.points = points
@@ -182,6 +182,13 @@ class Poly(Shape):
     def centroid(self):
         triangles = triangulate(self)
         return barycentric_to_cartesian([t.centroid() for t in triangles], [t.area() for t in triangles])
+
+    def __add__(self, point):
+        if type(point) is Point:
+            return Poly([p + point for p in self.points])
+        else:
+            return None
+
 
 
 class Circle(Shape):

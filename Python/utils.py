@@ -19,6 +19,7 @@ def make_poly_from_text(filename):
                 numbered_points.append((int(val, 16), Point(j/horiz, 1 - i/vert)))
 
     # print(numbered_points)
+    # Make sure polygons are in the right order, or you will end up randomly changing orienting code
     points = [np[1] for np in sorted(numbered_points, key=lambda x:x[0])]
 
     return Poly(points)

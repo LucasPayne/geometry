@@ -3,12 +3,16 @@
 #
 
 import sys
+from math import sin, cos
 from shapes import *
 
 def det(v1, v2):
     return dot(v1, Point(-v2.y, v2.x))
 
-
+def rotate_vector(v, theta):
+    return (v.x * Point(cos(theta), sin(theta)) +
+            v.y * Point(sin(theta), -cos(theta)))
+    
 def square_length(vector):
     return vector.x ** 2 + vector.y ** 2
 

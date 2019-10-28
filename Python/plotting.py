@@ -16,6 +16,15 @@ def plot(obj, **kwargs):
     if T == LineSeg:
         plt.plot([obj.a.x, obj.b.x], [obj.a.y, obj.b.y], **kwargs)
 
+    elif T == Ray:
+        plot(LineSeg(obj.a, obj.b), **kwargs)
+        plot_arrowhead(obj.b, obj.b - obj.a)
+
+    elif T == Line:
+        mid = midpoint(obj.a, obj.b)
+        plot(LineSeg(mid + 5.0 * (obj.a - mid), mid + 5.0 * (obj.b - mid)), color='lime')
+        plot(LineSeg(obj.a, obj.b), **kwargs)
+
     elif T == Poly:
         if len(obj) > 0:
             plt.plot([p.x for p in obj] + [obj[0].x], [p.y for p in obj] + [obj[0].y], **kwargs)
@@ -40,9 +49,6 @@ def plot(obj, **kwargs):
         plot(obj.origin, **kwargs)
         plot(obj.segments(), **kwargs)
 
-    elif T == Ray:
-        plot(LineSeg(obj.a, obj.b), **kwargs)
-        plot_arrowhead(obj.b, obj.b - obj.a)
 
     elif  T == CartesianFrame:
         plot(obj.origin, **kwargs)
@@ -60,7 +66,7 @@ def plot(obj, **kwargs):
         sys.exit()
 
 
-def plot_circle(circle, color='r', alpha=1):
+def plot_circle(circle, **kwargs):
     points_x = []
     points_y = []
     for i in range(360):
@@ -68,8 +74,8 @@ def plot_circle(circle, color='r', alpha=1):
         yc = sin(2*pi/360*i)
         points_x.append(circle.point.x + circle.radius * xc)
         points_y.append(circle.point.y + circle.radius * yc)
-    plt.scatter([circle.point.x], [circle.point.y], color=color, alpha=alpha)
-    plt.plot(points_x, points_y, color='r')
+    plt.scatter([circle.point.x], [circle.point.y], **kwargs)
+    plt.plot(points_x, points_y, **kwargs)
 
 
 def plot_arrowhead(point, direction, color='r', alpha=1):
