@@ -86,5 +86,3 @@ def plot_arrowhead(point, direction, color='r', alpha=1):
     plt.plot([arrowhead1.x, point.x, arrowhead2.x],
              [arrowhead1.y, point.y, arrowhead2.y],
              color=color, alpha=alpha)
-
-

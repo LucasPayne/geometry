@@ -42,7 +42,7 @@ def test_centroids():
         plt.show()
 # }}}
 
-def test_animate_triangulate():
+def test_animate_triangulation():
 # {{{
     # poly = Poly([Point(1, 1),
     #              Point(1, 2),
@@ -53,7 +53,7 @@ def test_animate_triangulate():
 
     for i in [1,2,4,5]:
         poly = make_poly_from_text(f"data/{i}.poly")
-        triangles = triangulate_animate(poly, f"triangulation{i}")
+        triangles = triangulation_animate(poly, f"triangulation{i}")
         # plot(poly)
         # plot(triangles, 'g')
         # plot(polygon_barycenter(poly))
@@ -61,32 +61,58 @@ def test_animate_triangulate():
 
 # }}}
 
-def test_triangulate():
+def test_triangulation():
 # {{{
     for i in [1,2,4,5]:
         poly = make_poly_from_text(f"data/{i}.poly")
-        triangulation = triangulate(poly)
+        triangles = triangulation_triangles(poly)
         plot(poly, color='k')
-        plot(triangulation, color='r')
+        plot(triangles, color='r')
         plt.show()
-
-
 # }}}
+
+def test_convex_partition():
+# {{{
+    for i in [1,2,4,5]:
+        poly = make_poly_from_text(f"data/{i}.poly")
+        parts = convex_partition(poly)
+        plot(parts, color='r')
+        plt.show()
+# }}}
+
+# >>> move this
+def plot_hatch_convex_poly(poly, **kwargs):
+    minx = min(p.x for p in poly)
+    maxx = max(p.x for p in poly)
+    
+    n = 100
+    for i in range(n):
+        x = minx + i * (maxx - minx)/n
+        line = Line(Point(x, -1), Point(x, 1))
+        intersect = intersection(line, poly)
+        if intersect and len(intersect) == 2:
+            plot(LineSeg(intersect[0], intersect[1]), **kwargs)
 
 def test_graph_triangulation():
 # {{{
     for i in [1,2,4,5]:
         poly = make_poly_from_text(f"data/{i}.poly")
-        convex_partition_graph = convex_partition(poly)
-        plot(convex_partition_graph.part_polys(), color='r')
-        plot_partition_graph(convex_partition_graph, color='k')
-        plt.show()
 
-    while True:
-        poly = random_convex_polygon(0, 1, 0, 1, 100, shift=1.25)
-        convex_partition_graph = convex_partition(poly)
-        plot(convex_partition_graph.part_polys(), color='r')
-        plot_partition_graph(convex_partition_graph, color='k')
+        tri_indices = triangulation(poly)
+
+        dual_graph = triangulation_dual_graph(poly, tri_indices)
+
+        plot(dual_graph.part_polys(), color='k')
+
+        colors = three_color_triangulation_dual_graph(dual_graph)
+        
+        for i, tri in enumerate(dual_graph.part_polys()):
+            plot_hatch_convex_poly(tri, color=['r','g','b'][colors[i]])
+
+        # plot_partition_graph(dual_graph, color='k')
+        # for i, p in enumerate(dual_graph.dual_points()):
+        #     plot(p, color=['r', 'g', 'b'][colors[i]])
+
         plt.show()
 
 # }}}
@@ -447,6 +473,18 @@ def test_line_circle_intersection():
 
         plt.show()
 # }}}
+
+def test_line_polygon_intersection():
+    while True:
+        line = Line(Point.random(1), Point.random(1))
+        poly = random_convex_polygon(0, 1, 0, 1, 10, shift=1.25)
+
+        intersect = intersection(line, poly)
+        plot([line, poly], color='r' if intersect else 'b')
+
+        plt.show()
+
+
 
 def prefix_function(function, prefunction):
     # from SO: hook python module function

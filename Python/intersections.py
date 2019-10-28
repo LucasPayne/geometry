@@ -96,8 +96,32 @@ def intersecting(objA, objB):
 def intersection(objA, objB):
     T = (type(objA), type(objB))
 
-    if T == (LineSeg, LineSeg):
+    if T == (Line, Poly):
+        # For just the intersecting test, rather just project to the normal line and test the interval.
+        # Clearly need a better way to do something like this
+        line, poly = objA, objB
+        intersects = []
+        for seg in objB.segments():
+            line_seg_intersect = intersection(line, seg)
+            if line_seg_intersect:
+                intersects.append(line_seg_intersect)
+        if len(intersects) == 0:
+            return None
+        return intersects
+
+    elif T == (LineSeg, LineSeg):
         return line_segments_intersection(objA, objB)
+
+    elif T == (Line, LineSeg):
+        line, seg = objA, objB
+        intersect = lines_intersection_barycentric(line, Line(seg.a, seg.b))
+        if not intersect:
+            return None
+        t, u = intersect
+        if 0 <= u <= 1:
+            return line.a + t * (line.b - line.a)
+        else:
+            return None
 
     elif T == (Line, Line):
         return lines_intersection(objA, objB)
