@@ -3,7 +3,8 @@
 #
 
 from shapes import *
-
+import os
+import sys
 
 def make_poly_from_text(filename):
     lines = open(filename).read().splitlines()
@@ -23,3 +24,5 @@ def make_poly_from_text(filename):
     points = [np[1] for np in sorted(numbered_points, key=lambda x:x[0])]
 
     return Poly(points)
+
+

@@ -86,3 +86,17 @@ def plot_arrowhead(point, direction, color='r', alpha=1):
     plt.plot([arrowhead1.x, point.x, arrowhead2.x],
              [arrowhead1.y, point.y, arrowhead2.y],
              color=color, alpha=alpha)
+
+def plot_hatch_convex_poly(poly, **kwargs):
+    minx = min(p.x for p in poly)
+    maxx = max(p.x for p in poly)
+    
+    n = 100
+    for i in range(n):
+        x = minx + i * (maxx - minx)/n
+        line = Line(Point(x, -1), Point(x, 1))
+
+
+        intersect = intersection(line, poly)
+        if intersect and len(intersect) == 2:
+            plot(LineSeg(intersect[0], intersect[1]), **kwargs)

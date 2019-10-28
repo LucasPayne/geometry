@@ -180,7 +180,7 @@ class Poly(Shape):
         return [LineSeg(self.points[i], self.points[(i + 1)%len(self.points)]) for i in range(len(self.points))]
 
     def centroid(self):
-        triangles = triangulate(self)
+        triangles = triangulation_triangles(self)
         return barycentric_to_cartesian([t.centroid() for t in triangles], [t.area() for t in triangles])
 
     def __add__(self, point):
