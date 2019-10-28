@@ -202,8 +202,8 @@ def triangulate_animate(poly, animate_file=""):
             p1 = cut_poly[(i-1) % len(cut_poly)]
             p2 = cut_poly[(i) % len(cut_poly)]
             p3 = cut_poly[(i+1) % len(cut_poly)]
-            if (all(not intersecting(LineSeg(p1, p3), seg) for seg in set(poly.lines()) - {LineSeg(p1, p2), LineSeg(p2, p3)})
-                    and all(not intersecting(p, Triangle(p1, p2, p3)) for p in poly.points)):
+            if (det(p1 - p2, p3 - p2) > 0
+                    and all(not intersecting(LineSeg(p1, p3), seg) for seg in set(poly.lines()) - {LineSeg(p1, p2), LineSeg(p2, p3)})):
                 cut_poly.points.remove(p2)
                 triangles.append(Triangle(p1, p2, p3))
                 if animate_file != "":
@@ -211,7 +211,7 @@ def triangulate_animate(poly, animate_file=""):
                     plot(triangles, color='r')
                     plot(Triangle(p1, p2, p3), color='g')
                     plt.savefig(f"/tmp/{animate_file}_{count}.png")
-                    plt.show()
+                    plt.clf()
                     count += 1
                 break
             elif animate_file != "":
@@ -219,7 +219,7 @@ def triangulate_animate(poly, animate_file=""):
                 plot(triangles, color='r')
                 plot(Triangle(p1, p2, p3), color='y')
                 plt.savefig(f"/tmp/{animate_file}_{count}.png")
-                plt.show()
+                plt.clf()
                 count += 1
     triangles.append(Triangle(*cut_poly))
     if animate_file != "":
@@ -227,11 +227,11 @@ def triangulate_animate(poly, animate_file=""):
         plot(triangles, color='r')
         plot(Triangle(*cut_poly), color='g')
         plt.savefig(f"/tmp/{animate_file}_{count}.png")
-        plt.show()
+        plt.clf()
 
         plot(triangles, color='r')
         plt.savefig(f"/tmp/{animate_file}_{count}.png")
-        plt.show()
+        plt.clf()
 
         subprocess.call([*"convert -delay 20 -loop 0".split(" "), f"/tmp/{animate_file}_*.png", f"images/{animate_file}.gif"])
         subprocess.call(["rm", *[f"/tmp/{animate_file}_{i}.png" for i in range(1, count+1)]])

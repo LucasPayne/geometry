@@ -51,7 +51,7 @@ def test_animate_triangulate():
     #              Point(3, 1),
     #              Point(3, -0.5)])
 
-    for i in [1,2,4]:
+    for i in [1,2,4,5]:
         poly = make_poly_from_text(f"data/{i}.poly")
         triangles = triangulate_animate(poly, f"triangulation{i}")
         # plot(poly)
