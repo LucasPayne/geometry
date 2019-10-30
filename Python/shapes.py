@@ -161,10 +161,53 @@ class OBB(Shape):
     def __repr__(self):
         return f"OBB({self.origin},\n\t{self.right}->{self.horiz},\n\t{self.up}^{self.vert})"
 
+
+class Graph:
+    def incident_nodes(node):
+        """ """
+
+class PolygonGraph(Graph):
+    """ Bidirectional
+        Node: index into polygon
+    """
+    def __init__(self, poly):
+        self.poly = poly
+        self.n = len(poly)
+    def incident_nodes(self, node):
+        return [(node - 1) % self.n, (node + 1) % self.n]
+
+class PolygonHullGraph(Graph):
+    """ Bidirectional
+        Node: index into polygon
+        Technically, there are incident nodes to vertices not on the hull. To work as a graph
+        of the hull, as indices into the polygon, the search should be started on the hull.
+    """
+    def __init__(self, hulled_poly):
+        self.poly = hulled_poly
+        self.fillings = hulled_poly.fillings
+
+    def incident_nodes(self, node):
+        nodes = []
+        skipped_left = False
+        skipped_right = False
+        for filling in self.fillings:
+            if node == filling[1]:
+                nodes.append(filling[0])
+                skipped_left = True
+            elif node == filling[0]:
+                nodes.append(filling[1])
+                skipped_right = True
+        if not skipped_left:
+            nodes.append((node - 1) % self.n)
+        if not skipped_right:
+            nodes.append((node + 1) % self.n)
+
+
         
 class Poly(Shape):
     def __init__(self, points):
         self.points = points
+        self.graph = PolygonGraph(self)
     def lines(self):
         for i, a in enumerate(self.points):
             b = self.points[(i + 1) % len(self.points)]
@@ -188,6 +231,75 @@ class Poly(Shape):
             return Poly([p + point for p in self.points])
         else:
             return None
+
+
+
+class Polygon(metaclass=ABCMeta):
+    @abstractmethod
+    def traversal(self, start_node):
+        """ """
+
+class HulledPoly(Poly):
+    """
+        Acts as the normal Poly, but has extra information about a hull polygon, which
+        is itself a Poly, which can be accessed and traversed.
+    """
+
+    class Hull(Poly):
+        def __init__(self, parent_poly):
+            self.parent_poly = parent_poly
+
+    def __init__(self, points):
+        super().__init__(points)
+        self.fillings, self.hull_len = convex_hull_poly(self)
+    
+    def hull(self):
+        """ Temporary implementation.
+            The point of the fillings representation should be that they mask the graph of the polygon,
+            and algorithms should not have random access into the polygon indices, rather a "generator",
+            an implicit graph interface, will allow algorithms to work with the convex hull as a polygon,
+            memory overhead only in the (probably) small number of fillings.
+
+            How should this masking be done nicely? Similarly, convex partitions, triangulations, etc, should
+            be traversable as shapes, yet only stored "masked" onto the polygon.
+
+            --- Replace with traversal
+        """
+
+        start_index = min(enumerate(self.points), key=lambda ip: (ip[1].x, ip[1].y))[0]
+        indices = [start_index]
+        i = start_index
+        while True:
+            skipped = False
+            for filling in self.fillings:
+                if filling[0] == i:
+                    i = filling[1]
+                    skipped = True
+                    break
+            if not skipped:
+                i = (i + 1) % len(self)
+            if i == start_index:
+                break
+            indices.append(i)
+            
+        return indices
+
+    # Generator: polygon traversal
+    # A generator is constructed from a 
+    
+    def traversal(self, start_index):
+        """ Does not stop. If not on the hull, this "revs" it up to the hull, and
+            continually traverses it.
+
+            This formulation as a generator is only possible because the polygon forms a simple closed curve, meaning its graph has a natural unambiguous traversal.
+            For example, far more complicated, if a convex hull of a polyhedra is stored as filling polygons, then for traversal algorithms will just work
+            with the graph, which will have incident nodes connected taking into consideration the filling polygons.
+        """
+        yield start_index
+        graph = PolygonHullGraph(self)
+        index = start_index
+        last_index = start_index
+
 
 
 
@@ -257,3 +369,4 @@ def transformed(obj, frame):
     else:
         print(f"Error: no transformation defined for {T}")
         sys.exit()
+

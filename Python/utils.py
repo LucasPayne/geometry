@@ -6,6 +6,13 @@ from shapes import *
 import os
 import sys
 import functools
+from matplotlib import pyplot as plt
+
+def lock_axes():
+    # Make sure pyplot always has equal axis aspects
+    def prefix_plt_show():
+        plt.gca().set_aspect('equal', adjustable='box')
+    plt.show = prefix_function(plt.show, prefix_plt_show)
 
 def make_poly_from_text(filename):
     lines = open(filename).read().splitlines()

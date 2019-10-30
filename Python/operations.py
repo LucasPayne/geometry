@@ -11,7 +11,10 @@ def det(v1, v2):
 
 def rotate_vector(v, theta):
     return (v.x * Point(cos(theta), sin(theta)) +
-            v.y * Point(sin(theta), -cos(theta)))
+            v.y * Point(-sin(theta), cos(theta)))
+
+def rotate_points(points, origin, theta):
+    return [rotate_vector(p - origin, theta) for p in points]
     
 def square_length(vector):
     return vector.x ** 2 + vector.y ** 2

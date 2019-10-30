@@ -111,58 +111,58 @@ def plot_partition_graph(partition_graph, **kwargs):
             #         Line(centroid1, centroid2)),  s=25, color='lime')
 # }}}
 
-def convex_partition(poly):
-# {{{
-    # ...
+# def convex_partition_attempt_2(poly):
+# # {{{
+#     # ...
 
-    # >>> Line segment intersect at endpoints
+#     # >>> Line segment intersect at endpoints
 
-    if len(poly) == 3:
-        return [poly]
+#     if len(poly) == 3:
+#         return [poly]
 
-    for i in range(len(poly)):
-        pleft = poly[(i - 1) % len(poly)]
-        pcenter = poly[i]
-        pright = poly[(i + 1) % len(poly)]
+#     for i in range(len(poly)):
+#         pleft = poly[(i - 1) % len(poly)]
+#         pcenter = poly[i]
+#         pright = poly[(i + 1) % len(poly)]
         
 
-        if det(pright - pcenter, pleft - pcenter) > 0:
-            last_pother_index = None
-            collecting = False
-            for j in range(len(poly)):
-                if j != (i - 1) % len(poly) and j != i and j != (i + 1) % len(poly):
-                    pother = poly[j]
-                    if all(not intersecting(LineSeg(pcenter, pother), seg) for seg in poly.segments()):
-                        collecting = True
-                        last_pother_index = j
-                    elif collecting:
-                        break
+#         if det(pright - pcenter, pleft - pcenter) > 0:
+#             last_pother_index = None
+#             collecting = False
+#             for j in range(len(poly)):
+#                 if j != (i - 1) % len(poly) and j != i and j != (i + 1) % len(poly):
+#                     pother = poly[j]
+#                     if all(not intersecting(LineSeg(pcenter, pother), seg) for seg in poly.segments()):
+#                         collecting = True
+#                         last_pother_index = j
+#                     elif collecting:
+#                         break
 
-            piece_one_points = []
-            k = last_pother_index
-            while k != i:
-                piece_one_points.append(poly[k])
-                k = (k + 1) % len(poly)
-            piece_one_points.append(poly[i])
-            piece_two_points = []
-            k = last_pother_index
-            while k != i:
-                piece_two_points.append(poly[k])
-                k = (k - 1) % len(poly)
-            piece_two_points.append(poly[i])
+#             piece_one_points = []
+#             k = last_pother_index
+#             while k != i:
+#                 piece_one_points.append(poly[k])
+#                 k = (k + 1) % len(poly)
+#             piece_one_points.append(poly[i])
+#             piece_two_points = []
+#             k = last_pother_index
+#             while k != i:
+#                 piece_two_points.append(poly[k])
+#                 k = (k - 1) % len(poly)
+#             piece_two_points.append(poly[i])
 
-            piece_one = Poly(piece_one_points)
-            piece_two = Poly(piece_two_points)
+#             piece_one = Poly(piece_one_points)
+#             piece_two = Poly(piece_two_points)
 
-            plot(poly, color='k')
-            plot(Ray(pcenter, poly[last_pother_index]), color='r')
-            plot(piece_one, color='b')
-            plt.show()
+#             plot(poly, color='k')
+#             plot(Ray(pcenter, poly[last_pother_index]), color='r')
+#             plot(piece_one, color='b')
+#             plt.show()
 
-            return convex_partition(piece_one) + convex_partition(piece_two)
+#             return convex_partition(piece_one) + convex_partition(piece_two)
 
-    return [poly] # must be convex
-# }}}
+#     return [poly] # must be convex
+# # }}}
 
 # def convex_partition_attempt_1(poly):
 # {{{
@@ -251,8 +251,8 @@ def triangulation_dual_graph(poly, tri_indices):
     return PartitionGraph(poly, tri_indices)
 # }}}
 
-
 def three_color_triangulation_dual_graph(dual_graph):
+# {{{
     """ Returns a list of 0, 1, 2 values ("colors"),
         one for each node in the dual graph (triangle in the triangulation).
     """
@@ -261,10 +261,9 @@ def three_color_triangulation_dual_graph(dual_graph):
     while len(dual_graph.parts_adjacency_list[cur_node]) > 2:
         cur_node += 1
     colors[cur_node] = 0
-    _three_color_triangulation_dual_graph(dual_graph, colors, cur_node)
+    recur_three_color_triangulation_dual_graph(dual_graph, colors, cur_node)
     return colors
-
-def _three_color_triangulation_dual_graph(dual_graph, colors, cur_node):
+def recur_three_color_triangulation_dual_graph(dual_graph, colors, cur_node):
     """ Returns a list of 'r', 'g', 'b' values,
         one for each node in the dual graph.
     """
@@ -273,8 +272,8 @@ def _three_color_triangulation_dual_graph(dual_graph, colors, cur_node):
         if colors[next_node] == '_':
             count += 1
             colors[next_node] = (colors[cur_node] + count) % 3
-            _three_color_triangulation_dual_graph(dual_graph, colors, next_node)
-
+            recur_three_color_triangulation_dual_graph(dual_graph, colors, next_node)
+# }}}
 
 def triangulation_triangles(poly):
 # {{{
@@ -338,7 +337,82 @@ def triangulation_animate(poly, animate_file=""):
     return triangles
 # }}}
 
-def convex_hull(points, animate_file=""):
+
+
+# >>>
+# Algorithms that work with polygons should work with _traversals_ of polygons.
+# Traversals are generators which work with the graph of the polygon.
+# In this way, the same algorithms can traverse explicit polygons, and hulls represented
+# only as fillings ("masking" the polygon). Maybe this idea could extend to other things, so that
+# shape information (partitioning, bounding volumes) can be represented relative to the object, but
+# still work as the shapes they form.
+
+
+def convex_hull_poly(poly):
+    """
+        Returns the "fillings" of the convex hull, pairs of indices into the polygon
+        which, in the same order, cover a concavity,
+        and the number of vertices on the convex hull.
+
+        Main use is for the computation of data for the HulledPoly object.
+
+        NOTES:
+            What about using a stack? Why not look up the polygon indices and wipe out fillings when the stack drops back over them?
+    """
+    class radial_point(Point):
+        def __lt__(self, other):
+            return det(self, other) < 0
+    # Get point with minimal y then x component.
+    start_point = min(poly, key=lambda p: (p.y, p.x))
+
+    # Radially sort the polygon from this starting point
+    sorted_indices = sorted(range(len(poly)), key=lambda i: radial_point(poly[i].x - start_point.x, poly[i].y - start_point.y))
+
+    include_bits = [True for _ in sorted_indices]
+    count = len(include_bits)
+    include_bits[0] = True
+    include_bits[1] = True
+    for i in range(2, len(sorted_indices)):
+        while True:
+            j = i - 1
+            while not include_bits[j]:
+                j -= 1
+            k = j - 1
+            while not include_bits[k]:
+                k -= 1
+            if det(poly[sorted_indices[i]] - poly[sorted_indices[j]], poly[sorted_indices[k]] - poly[sorted_indices[j]]) < 0:
+                break
+            include_bits[j] = False
+            count -= 1
+
+    # Now, doing the inverse permutation on the include bits will
+    # allow a pass to go over vertex indices and build up cyclic strings of Falses,
+    # giving the fillings.
+    # The way this is done here is quite horrible but it appears to work.
+    poly_include_bits = list(list(zip(*sorted(zip(sorted_indices, include_bits))))[1])
+    i = 0
+    for _ in range(len(poly)):
+        if poly_include_bits[i] and not poly_include_bits[(i + 1) % len(poly)]:
+            got_i = True
+            break
+        i += 1
+    fillings = []
+    if got_i:
+        filling_start = None
+        while poly_include_bits[i] is not None :
+            if filling_start is None:
+                if not poly_include_bits[i]:
+                    filling_start = (i - 1) % len(poly)
+            elif poly_include_bits[i]:
+                fillings.append((filling_start, i))
+                filling_start = None
+                poly_include_bits[i] = None
+            i = (i + 1) % len(poly)
+    return (fillings, count)
+
+        
+
+def animate_convex_hull(points, animate_file=""):
     # {{{
     origin = min(points, key=lambda p:p.y)
     
@@ -346,6 +420,7 @@ def convex_hull(points, animate_file=""):
     # sort by the angle the points make from the x axis.
     # Naive: take arc-cosines of the x-component of the points normalized
     #     sort anti-clockwise
+    # [it worked but should rather use a determinant check]
 
     radial_points = [origin] + sorted(set(points) - {origin}, key=lambda p: -acos(normalized(p - origin).x))
 

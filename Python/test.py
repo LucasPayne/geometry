@@ -32,10 +32,7 @@ def main():
         eval(f"test_{sys.argv[1]}()")
         sys.exit()
 
-    # Make sure pyplot always has equal axis aspects
-    def prefix_plt_show():
-        plt.gca().set_aspect('equal', adjustable='box')
-    plt.show = prefix_function(plt.show, prefix_plt_show)
+    lock_axes()
 
     # Initialize readline completer
     def complete(text, state):
